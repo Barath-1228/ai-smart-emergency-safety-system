@@ -2,3 +2,6 @@ Flask
 gunicorn
 numpy
 opencv-python-headless
+Flask
+opencv-python
+gunicorn

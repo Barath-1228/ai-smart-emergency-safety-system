@@ -199,101 +199,30 @@
     <p>Emergency Safety and Evidence System</p>
 </header>
 
-
 <div class="container">
 
-    <div class="sos-section"> {
+    <!-- ================= SOS MODULE ================= -->
 
-    const status = document.getElementById("status");
-    const locationText = document.getElementById("location");
+    <div class="sos-section">
 
-    status.innerText = "🚨 SOS Activated! Getting location...";
-    locationText.innerText = "";
+        <h2>🚨 Emergency SOS</h2>
 
-    if (!navigator.geolocation) {
-        status.innerText = "🚨 GPS not supported.";
-        return;
-    }
+        <button
+            class="sos-button"
+            onclick="activateSOS()">
+            SOS
+        </button>
 
-    navigator.geolocation.getCurrentPosition(
-        async function(position) {
+        <p id="status">System Ready</p>
 
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+        <p id="location"></p>
 
-            locationText.innerText =
-                "📍 Latitude: " + latitude +
-                " | Longitude: " + longitude;
-
-            status.innerText =
-                "🚨 SOS Activated! Sending alert...";
-
-            try {
-
-                const response = await fetch("/sos_alert", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        latitude: latitude,
-                        longitude: longitude
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-
-                    status.innerText =
-                        "✅ SOS Alert Prepared Successfully.";
-
-                    alert(
-                        "🚨 EMERGENCY SOS\n\n" +
-                        "Location captured successfully.\n" +
-                        "Emergency contacts: " +
-                        data.contacts
-                    );
-
-                } else {
-
-                    status.innerText =
-                        "⚠️ " + data.message;
-
-                    alert("⚠️ " + data.message);
-                }
-
-            } catch (error) {
-
-                console.error("SOS Error:", error);
-
-                status.innerText =
-                    "❌ Unable to connect to server.";
-
-                alert("❌ Server connection error.");
-            }
-        },
-
-        function(error) {
-
-            console.error("Location Error:", error);
-
-            status.innerText =
-                "🚨 SOS activated, but location unavailable.";
-
-            alert(
-                "Please allow location access in your browser."
-            );
-        }
-    );
-}
-
+    </div>
 
 
     <!-- ================= MODULE CARDS ================= -->
 
     <div class="cards">
-
 
         <!-- LOCATION -->
 
@@ -317,19 +246,16 @@
             <input
                 type="text"
                 id="contactName"
-                placeholder="Contact Name"
-            >
+                placeholder="Contact Name">
 
             <input
                 type="tel"
                 id="contactPhone"
-                placeholder="Phone Number"
-            >
+                placeholder="Phone Number">
 
             <button
                 class="add-button"
-                onclick="addContact()"
-            >
+                onclick="addContact()">
                 Add Contact
             </button>
 
@@ -352,46 +278,40 @@
                 id="camera"
                 autoplay
                 playsinline
-                style="display:none;"
-            ></video>
-
+                style="display:none;">
+            </video>
 
             <button
                 class="evidence-button"
                 id="startButton"
-                onclick="startEvidence()"
-            >
+                onclick="startEvidence()">
                 Start Evidence
             </button>
-
 
             <button
                 class="evidence-button"
                 id="stopButton"
                 onclick="stopEvidence()"
-                style="display:none;"
-            >
+                style="display:none;">
                 Stop Recording
             </button>
-
 
             <video
                 id="recordedVideo"
                 controls
-                style="display:none;"
-            ></video>
-
+                style="display:none;">
+            </video>
 
             <a
                 id="downloadVideo"
                 style="display:none;"
-                download="emergency_evidence.webm"
-            >
+                download="emergency_evidence.webm">
+
                 <button class="evidence-button">
                     Save Evidence
                 </button>
-            </a>
 
+            </a>
 
             <p id="evidenceStatus"></p>
 
@@ -410,8 +330,7 @@
 
             <button
                 class="evidence-button"
-                onclick="aiAnalysis()"
-            >
+                onclick="aiAnalysis()">
                 AI Analysis
             </button>
 
@@ -435,7 +354,7 @@
     // SOS + LOCATION
     // =====================================================
 
-    function activateSOS() {
+    async function activateSOS() {
 
         const status =
             document.getElementById("status");
@@ -451,15 +370,14 @@
         if (!navigator.geolocation) {
 
             status.innerText =
-                "🚨 SOS Activated! GPS not supported.";
+                "🚨 GPS not supported.";
 
             return;
         }
 
-
         navigator.geolocation.getCurrentPosition(
 
-            function(position) {
+            async function(position) {
 
                 const latitude =
                     position.coords.latitude;
@@ -467,28 +385,75 @@
                 const longitude =
                     position.coords.longitude;
 
-
-                status.innerText =
-                    "🚨 SOS Activated! Location captured.";
-
-
                 locationText.innerText =
                     "📍 Latitude: " +
                     latitude +
                     " | Longitude: " +
                     longitude;
 
+                status.innerText =
+                    "🚨 SOS Activated! Sending alert...";
 
-                alert(
-                    "Emergency SOS Activated!\n\n" +
-                    "Latitude: " +
-                    latitude +
-                    "\nLongitude: " +
-                    longitude
-                );
+                try {
 
+                    const response =
+                        await fetch("/sos_alert", {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                latitude: latitude,
+                                longitude: longitude
+                            })
+
+                        });
+
+                    const data =
+                        await response.json();
+
+                    if (data.success) {
+
+                        status.innerText =
+                            "✅ SOS Alert Prepared Successfully.";
+
+                        alert(
+                            "🚨 EMERGENCY SOS\n\n" +
+                            "Location captured successfully.\n" +
+                            "Emergency contacts: " +
+                            data.contacts
+                        );
+
+                    } else {
+
+                        status.innerText =
+                            "⚠️ " + data.message;
+
+                        alert(
+                            "⚠️ " +
+                            data.message
+                        );
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "SOS Error:",
+                        error
+                    );
+
+                    status.innerText =
+                        "❌ Unable to connect to server.";
+
+                    alert(
+                        "❌ Server connection error."
+                    );
+                }
             },
-
 
             function(error) {
 
@@ -497,21 +462,15 @@
                     error
                 );
 
-
                 status.innerText =
-                    "🚨 SOS Activated, but location unavailable.";
-
+                    "🚨 SOS activated, but location unavailable.";
 
                 alert(
                     "Please allow location access in your browser."
                 );
-
             }
-
         );
-
     }
-
 
 
     // =====================================================
@@ -522,17 +481,15 @@
 
         const name =
             document
-            .getElementById("contactName")
-            .value
-            .trim();
-
+                .getElementById("contactName")
+                .value
+                .trim();
 
         const phone =
             document
-            .getElementById("contactPhone")
-            .value
-            .trim();
-
+                .getElementById("contactPhone")
+                .value
+                .trim();
 
         if (name === "" || phone === "") {
 
@@ -542,7 +499,6 @@
 
             return;
         }
-
 
         try {
 
@@ -560,13 +516,10 @@
                         name: name,
                         phone: phone
                     })
-
                 });
-
 
             const data =
                 await response.json();
-
 
             if (data.success) {
 
@@ -574,16 +527,13 @@
                     "✅ Contact saved successfully!"
                 );
 
-
                 document
                     .getElementById("contactName")
                     .value = "";
 
-
                 document
                     .getElementById("contactPhone")
                     .value = "";
-
 
                 loadContacts();
 
@@ -592,9 +542,8 @@
                 alert(
                     "❌ " +
                     (data.message ||
-                    "Contact could not be saved.")
+                        "Contact could not be saved.")
                 );
-
             }
 
         } catch (error) {
@@ -604,15 +553,11 @@
                 error
             );
 
-
             alert(
                 "❌ Server connection error."
             );
-
         }
-
     }
-
 
 
     async function loadContacts() {
@@ -622,35 +567,26 @@
             const response =
                 await fetch("/contacts");
 
-
             if (!response.ok) {
 
                 throw new Error(
                     "Unable to load contacts"
                 );
-
             }
-
 
             const contacts =
                 await response.json();
-
 
             const list =
                 document.getElementById(
                     "contactList"
                 );
 
-
-            // Clear current list first
             list.innerHTML = "";
 
-
-            // Remove duplicate contacts
             const uniqueContacts = [];
 
             const seen = new Set();
-
 
             contacts.forEach(function(contact) {
 
@@ -658,17 +594,13 @@
                     contact[0] ||
                     (contact[1] + "-" + contact[2]);
 
-
                 if (!seen.has(contactId)) {
 
                     seen.add(contactId);
 
                     uniqueContacts.push(contact);
-
                 }
-
             });
-
 
             uniqueContacts.forEach(
                 function(contact) {
@@ -678,10 +610,8 @@
                             "div"
                         );
 
-
                     item.className =
                         "contact";
-
 
                     item.innerText =
                         "👤 " +
@@ -689,12 +619,9 @@
                         " - " +
                         contact[2];
 
-
                     list.appendChild(item);
-
                 }
             );
-
 
         } catch (error) {
 
@@ -702,18 +629,14 @@
                 "Contact loading error:",
                 error
             );
-
         }
-
     }
 
 
-    // Load contacts once
     window.addEventListener(
         "load",
         loadContacts
     );
-
 
 
     // =====================================================
@@ -725,7 +648,6 @@
     let mediaRecorder = null;
 
     let recordedChunks = [];
-
 
 
     async function startEvidence() {
@@ -742,7 +664,6 @@
         const status =
             document.getElementById("evidenceStatus");
 
-
         try {
 
             if (
@@ -753,38 +674,28 @@
                 throw new Error(
                     "Camera is not supported by this browser."
                 );
-
             }
 
-
             cameraStream =
-                await navigator
-                .mediaDevices
-                .getUserMedia({
+                await navigator.mediaDevices.getUserMedia({
 
                     video: true,
 
                     audio: true
-
                 });
-
 
             video.srcObject =
                 cameraStream;
 
-
             video.style.display =
                 "block";
 
-
             recordedChunks = [];
-
 
             mediaRecorder =
                 new MediaRecorder(
                     cameraStream
                 );
-
 
             mediaRecorder.ondataavailable =
                 function(event) {
@@ -797,9 +708,7 @@
                         recordedChunks.push(
                             event.data
                         );
-
                     }
-
                 };
 
 
@@ -815,52 +724,41 @@
                             }
                         );
 
-
                     const videoURL =
                         URL.createObjectURL(
                             blob
                         );
-
 
                     const recordedVideo =
                         document.getElementById(
                             "recordedVideo"
                         );
 
-
                     recordedVideo.src =
                         videoURL;
 
-
                     recordedVideo.style.display =
                         "block";
-
 
                     const downloadLink =
                         document.getElementById(
                             "downloadVideo"
                         );
 
-
-                    // Browser download
                     downloadLink.href =
                         videoURL;
 
-
                     downloadLink.style.display =
                         "inline-block";
-
 
                     status.innerText =
                         "⏳ Saving evidence...";
 
 
-                    // Send video to Flask
                     try {
 
                         const formData =
                             new FormData();
-
 
                         formData.append(
                             "video",
@@ -869,7 +767,6 @@
                             Date.now() +
                             ".webm"
                         );
-
 
                         const response =
                             await fetch(
@@ -880,10 +777,8 @@
                                 }
                             );
 
-
                         const data =
                             await response.json();
-
 
                         if (data.success) {
 
@@ -894,7 +789,6 @@
 
                             status.innerText =
                                 "❌ Evidence save failed.";
-
                         }
 
                     } catch (error) {
@@ -904,53 +798,39 @@
                             error
                         );
 
-
                         status.innerText =
                             "❌ Server error while saving evidence.";
-
                     }
-
                 };
 
 
             mediaRecorder.start();
 
-
             startButton.style.display =
                 "none";
-
 
             stopButton.style.display =
                 "inline-block";
 
-
             status.innerText =
                 "🔴 Evidence recording started.";
 
-        }
-
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "Camera Error:",
                 error
             );
 
-
             status.innerText =
                 "❌ Camera could not be opened.";
-
 
             alert(
                 "Camera Error: " +
                 error.message
             );
-
         }
-
     }
-
 
 
     function stopEvidence() {
@@ -974,7 +854,6 @@
         ) {
 
             mediaRecorder.stop();
-
         }
 
 
@@ -988,30 +867,23 @@
 
                 });
 
-
             cameraStream = null;
-
         }
 
 
         video.srcObject = null;
 
-
         video.style.display =
             "none";
-
 
         stopButton.style.display =
             "none";
 
-
         startButton.style.display =
             "inline-block";
 
-
         status.innerText =
             "⏳ Processing evidence...";
-
     }
 
 
@@ -1030,21 +902,22 @@
         try {
 
             const response =
-                await fetch("/analyze_evidence", {
-                    method: "POST"
-                });
+                await fetch(
+                    "/analyze_evidence",
+                    {
+                        method: "POST"
+                    }
+                );
 
             if (!response.ok) {
 
                 throw new Error(
                     "Server returned an error."
                 );
-
             }
 
             const data =
                 await response.json();
-
 
             if (data.success) {
 
@@ -1066,13 +939,13 @@
             } else {
 
                 aiStatus.innerText =
-                    "❌ " + data.message;
+                    "❌ " +
+                    data.message;
 
                 alert(
                     "❌ AI Analysis\n\n" +
                     data.message
                 );
-
             }
 
         } catch (error) {
@@ -1089,11 +962,8 @@
                 "❌ AI Analysis failed.\n\n" +
                 "Please make sure the Flask server is running."
             );
-
         }
-
     }
-
 
 </script>
 

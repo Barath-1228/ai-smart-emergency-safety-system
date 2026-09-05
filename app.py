@@ -37,7 +37,6 @@ def init_db():
     conn.close()
 
 
-# Initialize database when app starts
 init_db()
 
 
@@ -56,77 +55,12 @@ def home():
 
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
-    @app.route("/sos_alert", methods=["POST"])
-def sos_alert():
 
     try:
         data = request.get_json()
 
-        latitude = data.get("latitude")
-        longitude = data.get("longitude")
-
-        if latitude is None or longitude is None:
-            return jsonify({
-                "success": False,
-                "message": "Location is required"
-            }), 400
-
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT name, phone FROM emergency_contacts"
-        )
-
-        contacts = cursor.fetchall()
-        conn.close()
-
-        if not contacts:
-            return jsonify({
-                "success": False,
-                "message": "No emergency contacts saved"
-            }), 400
-
-        message = (
-            "EMERGENCY SOS ALERT!\n"
-            "Location captured.\n"
-            f"Latitude: {latitude}\n"
-            f"Longitude: {longitude}"
-        )
-
-        print("\n========== SOS ALERT ==========")
-        print(message)
-        print("Emergency Contacts:")
-
-        for name, phone in contacts:
-            print(f"{name} - {phone}")
-
-        print("================================\n")
-
-        return jsonify({
-            "success": True,
-            "message": "SOS alert prepared successfully",
-            "contacts": len(contacts)
-        })
-
-    except Exception as e:
-
-        return jsonify({
-            "success": False,
-            "message": str(e)
-        }), 500
-
-    try:
-        data = request.get_json()
-
-        if not data:
-            return jsonify({
-                "success": False,
-                "message": "Invalid data"
-            }), 400
-
-        name = str(data.get("name", "")).strip()
-        phone = str(data.get("phone", "")).strip()
+        name = data.get("name")
+        phone = data.get("phone")
 
         if not name or not phone:
             return jsonify({
@@ -138,10 +72,7 @@ def sos_alert():
         cursor = conn.cursor()
 
         cursor.execute(
-            """
-            INSERT INTO emergency_contacts (name, phone)
-            VALUES (?, ?)
-            """,
+            "INSERT INTO emergency_contacts (name, phone) VALUES (?, ?)",
             (name, phone)
         )
 
@@ -165,7 +96,7 @@ def sos_alert():
 # GET EMERGENCY CONTACTS
 # =====================================================
 
-@app.route("/contacts", methods=["GET"])
+@app.route("/contacts")
 def get_contacts():
 
     try:
@@ -181,6 +112,73 @@ def get_contacts():
         conn.close()
 
         return jsonify(contacts)
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+# =====================================================
+# SOS ALERT
+# =====================================================
+
+@app.route("/sos_alert", methods=["POST"])
+def sos_alert():
+
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "success": False,
+                "message": "No data received"
+            }), 400
+
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        if latitude is None or longitude is None:
+            return jsonify({
+                "success": False,
+                "message": "Location is required"
+            }), 400
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT name, phone FROM emergency_contacts"
+        )
+
+        contacts = cursor.fetchall()
+
+        conn.close()
+
+        if not contacts:
+            return jsonify({
+                "success": False,
+                "message": "No emergency contacts saved"
+            }), 400
+
+        print("\n========== SOS ALERT ==========")
+        print("EMERGENCY SOS ALERT!")
+        print("Latitude:", latitude)
+        print("Longitude:", longitude)
+        print("Emergency Contacts:")
+
+        for name, phone in contacts:
+            print(name, "-", phone)
+
+        print("================================")
+
+        return jsonify({
+            "success": True,
+            "message": "SOS alert prepared successfully",
+            "contacts": len(contacts)
+        })
 
     except Exception as e:
 
@@ -213,10 +211,8 @@ def save_evidence():
                 "message": "Invalid evidence file"
             }), 400
 
-        # Generate safe filename
         filename = os.path.basename(video.filename)
 
-        # If filename has no extension
         if not filename.lower().endswith(".webm"):
             filename += ".webm"
 
@@ -256,7 +252,6 @@ def analyze_evidence():
                 "message": "Evidence folder not found."
             }), 404
 
-        # Find saved WEBM evidence files
         files = [
             f for f in os.listdir(EVIDENCE_FOLDER)
             if f.lower().endswith(".webm")
@@ -268,7 +263,6 @@ def analyze_evidence():
                 "message": "No saved evidence found."
             }), 404
 
-        # Get latest evidence
         latest_file = max(
             files,
             key=lambda f: os.path.getmtime(
@@ -281,7 +275,6 @@ def analyze_evidence():
             latest_file
         )
 
-        # Open video using OpenCV
         cap = cv2.VideoCapture(video_path)
 
         if not cap.isOpened():
@@ -303,7 +296,6 @@ def analyze_evidence():
 
         cap.release()
 
-        # Basic evidence analysis
         if frame_count > 0:
 
             analysis_message = (
