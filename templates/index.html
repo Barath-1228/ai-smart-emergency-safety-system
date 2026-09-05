@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Smart Emergency Safety</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+        }
+
+        header p {
+            margin-top: 8px;
+            color: #d1d5db;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .sos-section {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .sos-button {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: none;
+            background: #dc2626;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 25px;
+        }
+
+        .sos-button:hover {
+            transform: scale(1.05);
+            background: #b91c1c;
+        }
+
+        #status {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #location {
+            margin-top: 10px;
+            color: #2563eb;
+            word-break: break-word;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 7px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .add-button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+        }
+
+        .add-button:hover {
+            background: #1d4ed8;
+        }
+
+        #contactList {
+            margin-top: 15px;
+        }
+
+        .contact {
+            background: #f3f4f6;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 8px;
+        }
+
+        .evidence-button {
+            margin-top: 15px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: #111827;
+            color: white;
+            font-size: 15px;
+        }
+
+        .evidence-button:hover {
+            background: #374151;
+        }
+
+        #camera,
+        #recordedVideo {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        #evidenceStatus {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        #aiStatus {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin: 30px;
+            color: #777;
+        }
+
+        @media (max-width: 700px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .sos-button {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛡️ AI Smart Emergency Safety</h1>
+    <p>Emergency Safety and Evidence System</p>
+</header>
+
+
+<div class="container">
+
+    <!-- ================= SOS MODULE ================= -->
+
+    <div class="sos-section">
+
+        <h2>Emergency SOS</h2>
+
+        <button class="sos-button" onclick="activateSOS()">
+            SOS
+        </button>
+
+        <p id="status">System Ready</p>
+
+        <p id="location"></p>
+
+    </div>
+
+
+    <!-- ================= MODULE CARDS ================= -->
+
+    <div class="cards">
+
+
+        <!-- LOCATION -->
+
+        <div class="card">
+
+            <h2>📍 Location</h2>
+
+            <p>
+                Get the user's current location during an emergency.
+            </p>
+
+        </div>
+
+
+        <!-- EMERGENCY CONTACTS -->
+
+        <div class="card">
+
+            <h2>👥 Emergency Contacts</h2>
+
+            <input
+                type="text"
+                id="contactName"
+                placeholder="Contact Name"
+            >
+
+            <input
+                type="tel"
+                id="contactPhone"
+                placeholder="Phone Number"
+            >
+
+            <button
+                class="add-button"
+                onclick="addContact()"
+            >
+                Add Contact
+            </button>
+
+            <div id="contactList"></div>
+
+        </div>
+
+
+        <!-- EVIDENCE -->
+
+        <div class="card">
+
+            <h2>🎥 Evidence</h2>
+
+            <p>
+                Record emergency evidence securely.
+            </p>
+
+            <video
+                id="camera"
+                autoplay
+                playsinline
+                style="display:none;"
+            ></video>
+
+
+            <button
+                class="evidence-button"
+                id="startButton"
+                onclick="startEvidence()"
+            >
+                Start Evidence
+            </button>
+
+
+            <button
+                class="evidence-button"
+                id="stopButton"
+                onclick="stopEvidence()"
+                style="display:none;"
+            >
+                Stop Recording
+            </button>
+
+
+            <video
+                id="recordedVideo"
+                controls
+                style="display:none;"
+            ></video>
+
+
+            <a
+                id="downloadVideo"
+                style="display:none;"
+                download="emergency_evidence.webm"
+            >
+                <button class="evidence-button">
+                    Save Evidence
+                </button>
+            </a>
+
+
+            <p id="evidenceStatus"></p>
+
+        </div>
+
+
+        <!-- AI ANALYSIS -->
+
+        <div class="card">
+
+            <h2>🤖 AI Analysis</h2>
+
+            <p>
+                AI can assist in analysing emergency evidence.
+            </p>
+
+            <button
+                class="evidence-button"
+                onclick="aiAnalysis()"
+            >
+                AI Analysis
+            </button>
+
+            <p id="aiStatus"></p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+    AI Smart Emergency Safety and Evidence System
+</footer>
+
+
+<script>
+
+    // =====================================================
+    // SOS + LOCATION
+    // =====================================================
+
+    function activateSOS() {
+
+        const status =
+            document.getElementById("status");
+
+        const locationText =
+            document.getElementById("location");
+
+        status.innerText =
+            "🚨 SOS Activated! Getting location...";
+
+        locationText.innerText = "";
+
+        if (!navigator.geolocation) {
+
+            status.innerText =
+                "🚨 SOS Activated! GPS not supported.";
+
+            return;
+        }
+
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position) {
+
+                const latitude =
+                    position.coords.latitude;
+
+                const longitude =
+                    position.coords.longitude;
+
+
+                status.innerText =
+                    "🚨 SOS Activated! Location captured.";
+
+
+                locationText.innerText =
+                    "📍 Latitude: " +
+                    latitude +
+                    " | Longitude: " +
+                    longitude;
+
+
+                alert(
+                    "Emergency SOS Activated!\n\n" +
+                    "Latitude: " +
+                    latitude +
+                    "\nLongitude: " +
+                    longitude
+                );
+
+            },
+
+
+            function(error) {
+
+                console.error(
+                    "Location Error:",
+                    error
+                );
+
+
+                status.innerText =
+                    "🚨 SOS Activated, but location unavailable.";
+
+
+                alert(
+                    "Please allow location access in your browser."
+                );
+
+            }
+
+        );
+
+    }
+
+
+
+    // =====================================================
+    // EMERGENCY CONTACTS
+    // =====================================================
+
+    async function addContact() {
+
+        const name =
+            document
+            .getElementById("contactName")
+            .value
+            .trim();
+
+
+        const phone =
+            document
+            .getElementById("contactPhone")
+            .value
+            .trim();
+
+
+        if (name === "" || phone === "") {
+
+            alert(
+                "Please enter contact name and phone number."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch("/add_contact", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone
+                    })
+
+                });
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                alert(
+                    "✅ Contact saved successfully!"
+                );
+
+
+                document
+                    .getElementById("contactName")
+                    .value = "";
+
+
+                document
+                    .getElementById("contactPhone")
+                    .value = "";
+
+
+                loadContacts();
+
+            } else {
+
+                alert(
+                    "❌ " +
+                    (data.message ||
+                    "Contact could not be saved.")
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Contact Error:",
+                error
+            );
+
+
+            alert(
+                "❌ Server connection error."
+            );
+
+        }
+
+    }
+
+
+
+    async function loadContacts() {
+
+        try {
+
+            const response =
+                await fetch("/contacts");
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load contacts"
+                );
+
+            }
+
+
+            const contacts =
+                await response.json();
+
+
+            const list =
+                document.getElementById(
+                    "contactList"
+                );
+
+
+            // Clear current list first
+            list.innerHTML = "";
+
+
+            // Remove duplicate contacts
+            const uniqueContacts = [];
+
+            const seen = new Set();
+
+
+            contacts.forEach(function(contact) {
+
+                const contactId =
+                    contact[0] ||
+                    (contact[1] + "-" + contact[2]);
+
+
+                if (!seen.has(contactId)) {
+
+                    seen.add(contactId);
+
+                    uniqueContacts.push(contact);
+
+                }
+
+            });
+
+
+            uniqueContacts.forEach(
+                function(contact) {
+
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    item.className =
+                        "contact";
+
+
+                    item.innerText =
+                        "👤 " +
+                        contact[1] +
+                        " - " +
+                        contact[2];
+
+
+                    list.appendChild(item);
+
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Contact loading error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    // Load contacts once
+    window.addEventListener(
+        "load",
+        loadContacts
+    );
+
+
+
+    // =====================================================
+    // EVIDENCE RECORDING
+    // =====================================================
+
+    let cameraStream = null;
+
+    let mediaRecorder = null;
+
+    let recordedChunks = [];
+
+
+
+    async function startEvidence() {
+
+        const video =
+            document.getElementById("camera");
+
+        const startButton =
+            document.getElementById("startButton");
+
+        const stopButton =
+            document.getElementById("stopButton");
+
+        const status =
+            document.getElementById("evidenceStatus");
+
+
+        try {
+
+            if (
+                !navigator.mediaDevices ||
+                !navigator.mediaDevices.getUserMedia
+            ) {
+
+                throw new Error(
+                    "Camera is not supported by this browser."
+                );
+
+            }
+
+
+            cameraStream =
+                await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video: true,
+
+                    audio: true
+
+                });
+
+
+            video.srcObject =
+                cameraStream;
+
+
+            video.style.display =
+                "block";
+
+
+            recordedChunks = [];
+
+
+            mediaRecorder =
+                new MediaRecorder(
+                    cameraStream
+                );
+
+
+            mediaRecorder.ondataavailable =
+                function(event) {
+
+                    if (
+                        event.data &&
+                        event.data.size > 0
+                    ) {
+
+                        recordedChunks.push(
+                            event.data
+                        );
+
+                    }
+
+                };
+
+
+            mediaRecorder.onstop =
+                async function() {
+
+                    const blob =
+                        new Blob(
+                            recordedChunks,
+                            {
+                                type:
+                                    "video/webm"
+                            }
+                        );
+
+
+                    const videoURL =
+                        URL.createObjectURL(
+                            blob
+                        );
+
+
+                    const recordedVideo =
+                        document.getElementById(
+                            "recordedVideo"
+                        );
+
+
+                    recordedVideo.src =
+                        videoURL;
+
+
+                    recordedVideo.style.display =
+                        "block";
+
+
+                    const downloadLink =
+                        document.getElementById(
+                            "downloadVideo"
+                        );
+
+
+                    // Browser download
+                    downloadLink.href =
+                        videoURL;
+
+
+                    downloadLink.style.display =
+                        "inline-block";
+
+
+                    status.innerText =
+                        "⏳ Saving evidence...";
+
+
+                    // Send video to Flask
+                    try {
+
+                        const formData =
+                            new FormData();
+
+
+                        formData.append(
+                            "video",
+                            blob,
+                            "emergency_evidence_" +
+                            Date.now() +
+                            ".webm"
+                        );
+
+
+                        const response =
+                            await fetch(
+                                "/save_evidence",
+                                {
+                                    method: "POST",
+                                    body: formData
+                                }
+                            );
+
+
+                        const data =
+                            await response.json();
+
+
+                        if (data.success) {
+
+                            status.innerText =
+                                "✅ Evidence saved successfully.";
+
+                        } else {
+
+                            status.innerText =
+                                "❌ Evidence save failed.";
+
+                        }
+
+                    } catch (error) {
+
+                        console.error(
+                            "Evidence Save Error:",
+                            error
+                        );
+
+
+                        status.innerText =
+                            "❌ Server error while saving evidence.";
+
+                    }
+
+                };
+
+
+            mediaRecorder.start();
+
+
+            startButton.style.display =
+                "none";
+
+
+            stopButton.style.display =
+                "inline-block";
+
+
+            status.innerText =
+                "🔴 Evidence recording started.";
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "Camera Error:",
+                error
+            );
+
+
+            status.innerText =
+                "❌ Camera could not be opened.";
+
+
+            alert(
+                "Camera Error: " +
+                error.message
+            );
+
+        }
+
+    }
+
+
+
+    function stopEvidence() {
+
+        const video =
+            document.getElementById("camera");
+
+        const startButton =
+            document.getElementById("startButton");
+
+        const stopButton =
+            document.getElementById("stopButton");
+
+        const status =
+            document.getElementById("evidenceStatus");
+
+
+        if (
+            mediaRecorder &&
+            mediaRecorder.state === "recording"
+        ) {
+
+            mediaRecorder.stop();
+
+        }
+
+
+        if (cameraStream) {
+
+            cameraStream
+                .getTracks()
+                .forEach(function(track) {
+
+                    track.stop();
+
+                });
+
+
+            cameraStream = null;
+
+        }
+
+
+        video.srcObject = null;
+
+
+        video.style.display =
+            "none";
+
+
+        stopButton.style.display =
+            "none";
+
+
+        startButton.style.display =
+            "inline-block";
+
+
+        status.innerText =
+            "⏳ Processing evidence...";
+
+    }
+
+
+    // =====================================================
+    // AI ANALYSIS
+    // =====================================================
+
+    async function aiAnalysis() {
+
+        const aiStatus =
+            document.getElementById("aiStatus");
+
+        aiStatus.innerText =
+            "🤖 AI is analysing the latest evidence...";
+
+        try {
+
+            const response =
+                await fetch("/analyze_evidence", {
+                    method: "POST"
+                });
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Server returned an error."
+                );
+
+            }
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                aiStatus.innerText =
+                    "✅ AI Analysis completed successfully.";
+
+                alert(
+                    "🤖 AI Evidence Analysis\n\n" +
+                    "Evidence File: " +
+                    data.filename +
+                    "\n\n" +
+                    "Frames Analysed: " +
+                    data.frames +
+                    "\n\n" +
+                    "Status: " +
+                    data.message
+                );
+
+            } else {
+
+                aiStatus.innerText =
+                    "❌ " + data.message;
+
+                alert(
+                    "❌ AI Analysis\n\n" +
+                    data.message
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "AI Analysis Error:",
+                error
+            );
+
+            aiStatus.innerText =
+                "❌ AI Analysis server error.";
+
+            alert(
+                "❌ AI Analysis failed.\n\n" +
+                "Please make sure the Flask server is running."
+            );
+
+        }
+
+    }
+
+
+</script>
+
+</body>
+</html>
