@@ -5,12 +5,24 @@ import cv2
 
 app = Flask(__name__)
 
-DATABASE = "emergency.db"
+# =====================================================
+# CONFIGURATION
+# =====================================================
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATABASE = os.path.join(BASE_DIR, "emergency.db")
+EVIDENCE_FOLDER = os.path.join(BASE_DIR, "evidence")
+
+os.makedirs(EVIDENCE_FOLDER, exist_ok=True)
+
+
+# =====================================================
+# DATABASE
+# =====================================================
 
 def init_db():
     conn = sqlite3.connect(DATABASE)
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -25,161 +37,252 @@ def init_db():
     conn.close()
 
 
+# Initialize database when app starts
+init_db()
+
+
+# =====================================================
+# HOME PAGE
+# =====================================================
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
+# =====================================================
+# ADD EMERGENCY CONTACT
+# =====================================================
+
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
 
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    name = data.get("name")
-    phone = data.get("phone")
+        if not data:
+            return jsonify({
+                "success": False,
+                "message": "Invalid data"
+            }), 400
 
-    if not name or not phone:
+        name = str(data.get("name", "")).strip()
+        phone = str(data.get("phone", "")).strip()
+
+        if not name or not phone:
+            return jsonify({
+                "success": False,
+                "message": "Name and phone are required"
+            }), 400
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO emergency_contacts (name, phone)
+            VALUES (?, ?)
+            """,
+            (name, phone)
+        )
+
+        conn.commit()
+        conn.close()
+
         return jsonify({
-            "success": False,
-            "message": "Name and phone are required"
+            "success": True,
+            "message": "Contact saved successfully"
         })
 
-    conn = sqlite3.connect(DATABASE)
+    except Exception as e:
 
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "INSERT INTO emergency_contacts (name, phone) VALUES (?, ?)",
-        (name, phone)
-    )
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({
-        "success": True,
-        "message": "Contact saved successfully"
-    })
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 
-@app.route("/contacts")
+# =====================================================
+# GET EMERGENCY CONTACTS
+# =====================================================
+
+@app.route("/contacts", methods=["GET"])
 def get_contacts():
 
-    conn = sqlite3.connect(DATABASE)
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
 
-    cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, name, phone FROM emergency_contacts"
+        )
 
-    cursor.execute(
-        "SELECT id, name, phone FROM emergency_contacts"
-    )
+        contacts = cursor.fetchall()
 
-    contacts = cursor.fetchall()
+        conn.close()
 
-    conn.close()
+        return jsonify(contacts)
 
-    return jsonify(contacts)
+    except Exception as e:
 
-import os
-from flask import request, jsonify
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
-EVIDENCE_FOLDER = "evidence"
 
-os.makedirs(EVIDENCE_FOLDER, exist_ok=True)
-
+# =====================================================
+# SAVE EVIDENCE
+# =====================================================
 
 @app.route("/save_evidence", methods=["POST"])
+def save_evidence():
+
+    try:
+
+        if "video" not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "No evidence file received"
+            }), 400
+
+        video = request.files["video"]
+
+        if not video or not video.filename:
+            return jsonify({
+                "success": False,
+                "message": "Invalid evidence file"
+            }), 400
+
+        # Generate safe filename
+        filename = os.path.basename(video.filename)
+
+        # If filename has no extension
+        if not filename.lower().endswith(".webm"):
+            filename += ".webm"
+
+        filepath = os.path.join(
+            EVIDENCE_FOLDER,
+            filename
+        )
+
+        video.save(filepath)
+
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "message": "Evidence saved successfully"
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+# =====================================================
+# AI ANALYSIS
+# =====================================================
+
 @app.route("/analyze_evidence", methods=["POST"])
 def analyze_evidence():
 
-    evidence_folder = "evidence"
+    try:
 
-    if not os.path.exists(evidence_folder):
-        return jsonify({
-            "success": False,
-            "message": "Evidence folder not found."
-        })
+        if not os.path.exists(EVIDENCE_FOLDER):
+            return jsonify({
+                "success": False,
+                "message": "Evidence folder not found."
+            }), 404
 
-    files = [
-        f for f in os.listdir(evidence_folder)
-        if f.lower().endswith(".webm")
-    ]
+        # Find saved WEBM evidence files
+        files = [
+            f for f in os.listdir(EVIDENCE_FOLDER)
+            if f.lower().endswith(".webm")
+        ]
 
-    if not files:
-        return jsonify({
-            "success": False,
-            "message": "No saved evidence found."
-        })
+        if not files:
+            return jsonify({
+                "success": False,
+                "message": "No saved evidence found."
+            }), 404
 
-    latest_file = max(
-        files,
-        key=lambda f: os.path.getmtime(
-            os.path.join(evidence_folder, f)
+        # Get latest evidence
+        latest_file = max(
+            files,
+            key=lambda f: os.path.getmtime(
+                os.path.join(EVIDENCE_FOLDER, f)
+            )
         )
-    )
 
-    video_path = os.path.join(
-        evidence_folder,
-        latest_file
-    )
+        video_path = os.path.join(
+            EVIDENCE_FOLDER,
+            latest_file
+        )
 
-    cap = cv2.VideoCapture(video_path)
+        # Open video using OpenCV
+        cap = cv2.VideoCapture(video_path)
 
-    if not cap.isOpened():
+        if not cap.isOpened():
+            return jsonify({
+                "success": False,
+                "message": "Unable to open evidence video."
+            }), 500
+
+        frame_count = 0
+
+        while True:
+
+            ret, frame = cap.read()
+
+            if not ret:
+                break
+
+            frame_count += 1
+
+        cap.release()
+
+        # Basic evidence analysis
+        if frame_count > 0:
+
+            analysis_message = (
+                "AI analysis completed. "
+                "Evidence video is readable and "
+                "frames were successfully detected."
+            )
+
+        else:
+
+            analysis_message = (
+                "Evidence video was opened, "
+                "but no frames were detected."
+            )
+
         return jsonify({
-            "success": False,
-            "message": "Unable to open evidence video."
+            "success": True,
+            "filename": latest_file,
+            "frames": frame_count,
+            "message": analysis_message
         })
 
-    frame_count = 0
+    except Exception as e:
 
-    while True:
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        frame_count += 1
-
-    cap.release()
-
-    return jsonify({
-        "success": True,
-        "filename": latest_file,
-        "frames": frame_count,
-        "message": "AI analysis completed successfully."
-    })
-def save_evidence():
-
-    if "video" not in request.files:
         return jsonify({
             "success": False,
-            "message": "No evidence file received"
-        })
+            "message": "AI analysis failed: " + str(e)
+        }), 500
 
-    video = request.files["video"]
 
-    filename = video.filename
+# =====================================================
+# RUN APPLICATION
+# =====================================================
 
-    if not filename:
-        filename = "emergency_evidence.webm"
-
-    filepath = os.path.join(
-        EVIDENCE_FOLDER,
-        filename
-    )
-
-    video.save(filepath)
-
-    return jsonify({
-        "success": True,
-        "message": "Evidence saved successfully"
-    })
 if __name__ == "__main__":
-
-    init_db()
 
     app.run(
         debug=True,
         host="0.0.0.0",
-        port=5000
+        port=int(os.environ.get("PORT", 5000))
     )
