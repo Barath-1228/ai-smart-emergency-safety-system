@@ -202,21 +202,92 @@
 
 <div class="container">
 
-    <!-- ================= SOS MODULE ================= -->
+    <div class="sos-section"> {
 
-    <div class="sos-section">
+    const status = document.getElementById("status");
+    const locationText = document.getElementById("location");
 
-        <h2>Emergency SOS</h2>
+    status.innerText = "🚨 SOS Activated! Getting location...";
+    locationText.innerText = "";
 
-        <button class="sos-button" onclick="activateSOS()">
-            SOS
-        </button>
+    if (!navigator.geolocation) {
+        status.innerText = "🚨 GPS not supported.";
+        return;
+    }
 
-        <p id="status">System Ready</p>
+    navigator.geolocation.getCurrentPosition(
+        async function(position) {
 
-        <p id="location"></p>
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
 
-    </div>
+            locationText.innerText =
+                "📍 Latitude: " + latitude +
+                " | Longitude: " + longitude;
+
+            status.innerText =
+                "🚨 SOS Activated! Sending alert...";
+
+            try {
+
+                const response = await fetch("/sos_alert", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+
+                    status.innerText =
+                        "✅ SOS Alert Prepared Successfully.";
+
+                    alert(
+                        "🚨 EMERGENCY SOS\n\n" +
+                        "Location captured successfully.\n" +
+                        "Emergency contacts: " +
+                        data.contacts
+                    );
+
+                } else {
+
+                    status.innerText =
+                        "⚠️ " + data.message;
+
+                    alert("⚠️ " + data.message);
+                }
+
+            } catch (error) {
+
+                console.error("SOS Error:", error);
+
+                status.innerText =
+                    "❌ Unable to connect to server.";
+
+                alert("❌ Server connection error.");
+            }
+        },
+
+        function(error) {
+
+            console.error("Location Error:", error);
+
+            status.innerText =
+                "🚨 SOS activated, but location unavailable.";
+
+            alert(
+                "Please allow location access in your browser."
+            );
+        }
+    );
+}
+
 
 
     <!-- ================= MODULE CARDS ================= -->

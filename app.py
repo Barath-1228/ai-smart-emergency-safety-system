@@ -56,6 +56,65 @@ def home():
 
 @app.route("/add_contact", methods=["POST"])
 def add_contact():
+    @app.route("/sos_alert", methods=["POST"])
+def sos_alert():
+
+    try:
+        data = request.get_json()
+
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        if latitude is None or longitude is None:
+            return jsonify({
+                "success": False,
+                "message": "Location is required"
+            }), 400
+
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT name, phone FROM emergency_contacts"
+        )
+
+        contacts = cursor.fetchall()
+        conn.close()
+
+        if not contacts:
+            return jsonify({
+                "success": False,
+                "message": "No emergency contacts saved"
+            }), 400
+
+        message = (
+            "EMERGENCY SOS ALERT!\n"
+            "Location captured.\n"
+            f"Latitude: {latitude}\n"
+            f"Longitude: {longitude}"
+        )
+
+        print("\n========== SOS ALERT ==========")
+        print(message)
+        print("Emergency Contacts:")
+
+        for name, phone in contacts:
+            print(f"{name} - {phone}")
+
+        print("================================\n")
+
+        return jsonify({
+            "success": True,
+            "message": "SOS alert prepared successfully",
+            "contacts": len(contacts)
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
     try:
         data = request.get_json()
